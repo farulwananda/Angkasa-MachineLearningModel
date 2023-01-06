@@ -8,12 +8,13 @@ from tensorflow.keras import Model
 from tensorflow.keras.preprocessing import image
 from tensorflow.keras.layers import Dropout
 from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, BatchNormalization
 from tensorflow.keras.initializers import RandomNormal, Constant
+from tensorflow.keras.callbacks import LearningRateScheduler, TensorBoard
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
+
 
 gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
@@ -82,13 +83,13 @@ validation_generator = val_datagen.flow_from_directory(
     subset="validation"
 
 )
-
-model = tf.keras.models.Sequential([
+# tf.keras.models
+model = Sequential([
     tf.keras.layers.Conv2D(32, (3, 3), strides=(1, 1), activation='relu', input_shape=(64, 64, 3)),
     tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='valid'),
     tf.keras.layers.Conv2D(64, (3, 3), strides=(1, 1), activation='relu'),
     tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='valid'),
-    tf.keras.layers.Conv2D(128, (3, 3), strides=(1, 1), activation='relu'),
+    tf.keras.layers.Conv2D(64, (3, 3), strides=(1, 1), activation='relu'),
     tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='valid'),
     tf.keras.layers.Flatten(),
     tf.keras.layers.Dropout(0.5),
@@ -123,6 +124,8 @@ model = tf.keras.models.Sequential([
 
 ])
 
+model.summary()
+
 Adam(learning_rate=0.0015, name='Adam')
 model.compile(optimizer='Adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
@@ -134,14 +137,14 @@ def scheduler(epoch, lr):
         return lr * tf.math.exp(-0.1)
 
 
-lr_schedule = tf.keras.callbacks.LearningRateScheduler(scheduler, verbose=1)
-tb_callback = tf.keras.callbacks.TensorBoard(
+lr_schedule = LearningRateScheduler(scheduler, verbose=1)
+tb_callback = TensorBoard(
     log_dir='logs', histogram_freq=0, write_graph=True, write_images=False,
     update_freq='epoch', embeddings_freq=0,
     embeddings_metadata=None
 )
 
-accuracy = 0.99
+accuracy = 0.98
 
 
 class func_callback(tf.keras.callbacks.Callback):
@@ -157,10 +160,10 @@ batch_size = 16
 
 history = model.fit(
     train_generator,
-    steps_per_epoch=335 // batch_size,
-    epochs=100,
+    steps_per_epoch=320 // batch_size,
+    epochs=500,
     validation_data=validation_generator,
-    validation_steps=83 // batch_size,
+    validation_steps=80 // batch_size,
     verbose=2,
     callbacks=[lr_schedule, callback])
 
@@ -189,9 +192,13 @@ plt.legend(loc=0)
 plt.figure()
 plt.show()
 
+
+
+
 # model_json = model.to_json()
 # with open("model.json", "w") as json_file:
 #     json_file.write(model_json)
 # serialize weights to HDF5
-model.save("model_x3.h5")
-print("Saved model to disk")
+# model.save("model/model_t19.h5")
+# print("Model save successfully")
+
